@@ -2,10 +2,8 @@ package eu.siacs.conversations.entities;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.os.SystemClock;
 
 import net.java.otr4j.OtrException;
-import net.java.otr4j.crypto.OtrCryptoEngineImpl;
 import net.java.otr4j.crypto.OtrCryptoException;
 import net.java.otr4j.session.SessionID;
 import net.java.otr4j.session.SessionImpl;
@@ -371,7 +369,7 @@ public class Conversation extends AbstractEntity implements Blockable {
 	public static Conversation fromCursor(Cursor cursor) {
 		Jid jid;
 		try {
-			jid = Jid.fromString(cursor.getString(cursor.getColumnIndex(CONTACTJID)));
+			jid = Jid.fromString(cursor.getString(cursor.getColumnIndex(CONTACTJID)), true);
 		} catch (final InvalidJidException e) {
 			// Borked DB..
 			jid = null;
@@ -733,6 +731,19 @@ public class Conversation extends AbstractEntity implements Blockable {
 			for(Message message : this.messages) {
 				message.untie();
 			}
+		}
+	}
+
+	public int unreadCount() {
+		synchronized (this.messages) {
+			int count = 0;
+			for(int i = this.messages.size() - 1; i >= 0; --i) {
+				if (this.messages.get(i).isRead()) {
+					return count;
+				}
+				++count;
+			}
+			return count;
 		}
 	}
 
